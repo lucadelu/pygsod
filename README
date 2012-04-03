@@ -1,0 +1,11 @@
+Thank you for downlaoding pygsod
+
+pygsod is a python library to download and process Modis data from NASA ftp
+
+(c) Copyright Luca Delucchi - 2010
+
+pygsod is licensed under the terms of GNU GPL 2
+    Read COPYING for more info
+
+How to compile pygsod:
+    See INSTALL file.
