@@ -185,7 +185,7 @@ class downGSOD:
                 # create name according to FTP style
                 tname = "%s-%s.op.gz" % (tile, year)
                 # if station exists for that year append to the download list
-                if tname in self.listfilesall:
+                if tname in listfilesall:
                     listfiles.append(tname)
         # without any stations it take all of them
         else:
