@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#  class to download modis data
+#  class to download GSOD data
 #
 #  (c) Copyright Luca Delucchi 2012
 #  Authors: Luca Delucchi
