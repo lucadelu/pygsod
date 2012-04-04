@@ -25,11 +25,11 @@ setup(
   name = 'pygsod',
   version = '0.1.0',
   py_modules = ['pygsod.downgsod'],
-  scripts = ['scripts/gsod_download.py'],
+  scripts = ['scripts/gsod_download.py','scripts/gsod_conversion.py'],
   author = 'Luca Delucchi',
   author_email = 'luca.delucchi@iasma.it',
   url = 'http://gis.fem-environment.eu/gis-development/pygsod',
   description = 'Python library for GSOD data',
-  long_description = 'Python library to download GSOD data',
+  long_description = 'Python library to download and work GSOD data',
   license = 'GNU GPL 2 or later'
 )
