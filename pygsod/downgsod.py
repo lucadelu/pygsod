@@ -36,6 +36,7 @@ class downGSOD:
                     user = "anonymous",
                     url = "ftp.ncdc.noaa.gov",
                     stations = None,
+                    file_stations = None
                     firstyear = 1928,
                     endyear = None,
                     debug = False
@@ -67,6 +68,8 @@ class downGSOD:
         # stations to downloads
         if stations:
             self.tiles = stations.split(',')
+        elif file_stations:
+            self.tiles = self.readFile(file_stations)
         else:
             self.tiles = None
         # set destination folder
@@ -95,6 +98,21 @@ class downGSOD:
         LOGGING_FORMAT='%(asctime)s - %(levelname)s - %(message)s'
         logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, \
         format=LOGGING_FORMAT)
+
+    def readFile(self,filename):
+        """ Read file to create list of station
+            The file should be like this
+            000040.99999
+            000050.99999
+            000090.99999
+            000110.99999
+            000140.99999
+            ........
+        """
+        fn = open(filename)
+        stations = [x.strip() for x in fn.readlines()]
+        fn.close()
+        return stations        
         
     def connectFTP(self):
         """ Set connection to ftp server, move to path where data are stored
