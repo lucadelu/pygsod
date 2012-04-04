@@ -98,6 +98,8 @@ class downGSOD:
         LOGGING_FORMAT='%(asctime)s - %(levelname)s - %(message)s'
         logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG, \
         format=LOGGING_FORMAT)
+        if self.debug == True:
+            logging.debug("The number of stations required in: %i" % len(self.tiles))
 
     def readFile(self,filename):
         """ Read file to create list of station
@@ -168,7 +170,7 @@ class downGSOD:
         # set end year variable to the current year
         if self.end == None:
             self.end = date.today().year
-        if self.debug==True:
+        if self.debug == True:
             logging.debug("Start year %s, end year %s" % (self.first, self.end))
         rangeYears = range(int(self.first),int(self.end)+1)
         return [str(year) for year in rangeYears if str(year) in self.dirData]
@@ -190,6 +192,11 @@ class downGSOD:
         # without any stations it take all of them
         else:
             listfiles = listfilesall
+        if self.debug == True:
+            logging.debug("The number of stations to download is: %i" % len(listfiles))
+        if len(listfiles) == 0:
+            logging.error("Error the number of stations to download for "\
+                           + "year %s is %i" % (year, len(listfiles)))
         return listfiles
 
     def checkDataExist(self,listNewFile, move = 0):
@@ -244,7 +251,7 @@ class downGSOD:
         """ Downloads stations for all years """
         listYears = self.getListYears()
         if self.debug==True:
-            logging.debug("The number of years to download is: %i" % len(days))
+            logging.debug("The number of years to download is: %i" % len(listYears))
         #for each year
         for year in listYears:
             #enter in the directory of year
