@@ -170,7 +170,7 @@ class downGSOD:
             self.end = date.today().year
         if self.debug==True:
             logging.debug("Start year %s, end year %s" % (self.first, self.end))
-        rangeYears = range(self.first,self.end+1)
+        rangeYears = range(int(self.first),int(self.end)+1)
         return [str(year) for year in rangeYears if str(year) in self.dirData]
         
     def getFilesList(self,year):
