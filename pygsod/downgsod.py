@@ -36,7 +36,7 @@ class downGSOD:
                     user = "anonymous",
                     url = "ftp.ncdc.noaa.gov",
                     stations = None,
-                    file_stations = None
+                    file_stations = None,
                     firstyear = 1928,
                     endyear = None,
                     debug = False
