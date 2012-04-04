@@ -3,7 +3,7 @@
 #
 #  (c) Copyright Luca Delucchi 2012
 #  Authors: Luca Delucchi
-#  Email: luca dot delucchi at iasma dot it
+#  Email: luca dot delucchi at fmach dot it
 #
 ##################################################################
 #
@@ -134,8 +134,8 @@ class downGSOD:
             self.dirData = [elem.split()[-1] for elem in self.dirData if elem.startswith("d")]
             if self.debug==True:
                 logging.debug("Open connection %s" % self.url)
-        except EOFError:
-            logging.error('Error in connection')
+        except (EOFError, socket.gaierror), e:
+            logging.error('Error in connection: %s' % e)
             self.connectFTP()
 
     def closeFTP(self):
@@ -224,7 +224,7 @@ class downGSOD:
             if self.debug==True:
                 logging.debug("File %s downloaded" % filDown)
         #if it have an error it try to download again the file
-        except (ftplib.error_reply,socket.error), e:
+        except (ftplib.error_reply,ftplib.error_perm,socket.error), e:
             logging.error("Cannot download %s, retry.." % filDown)
             self.connectFTP()
             self.downloadFile(filDown,filSave)
