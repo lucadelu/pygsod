@@ -33,8 +33,8 @@ def inches2mm(length):  return "%.1f" % (float(length) * 25.4 * 0.1)
 
 input_format = [
     #name, start, end, conversion function, sql type
-    ('stn',1,6,None,'INTEGER'),
-    ('wban',8,12,None,'INTEGER'),
+    ('stn',1,6,None,'CHAR(6)'),
+    ('wban',8,12,None,'CHAR(6)'),
     ('year',15,18,None,'INTEGER'),
     ('month',19,20,None,'INTEGER'),
     ('day',21,22,None,'INTEGER'),
