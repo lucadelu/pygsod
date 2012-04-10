@@ -93,7 +93,7 @@ def parse(fname,validate=None):
             if missing_data.match(value): value = None
             elif conv: value = conv(value)
             tmp.append(value)
-            if validate: tmp = validate(tmp)
+        if validate: tmp = validate(tmp)
         values.append(tmp)
     return values
 
@@ -109,8 +109,8 @@ def output_sql(values,tbl,create):
     fields = [ (field,type) for (field,start,end,conv,type) in input_format ]
     if create:
         print "CREATE TABLE %s (\n %s,\n PRIMARY KEY (%s)\n);" % (
-        tbl,",\n ".join([ "%s %s" % (f,t) for (f,t) in fields]),
-        ", ".join([p for p in pkey_fields])
+        	tbl,",\n ".join([ "%s %s" % (f,t) for (f,t) in fields]),
+        	", ".join([p for p in pkey_fields])
         )
     text = re.compile('char',re.I)
     for lst in values:
