@@ -23,6 +23,7 @@
 import sys
 import os.path
 import re
+import getpass
 
 from optparse import OptionParser
 
@@ -172,7 +173,7 @@ if __name__ == "__main__":
                      help="the name of database [used in sql mode only]")                     
     parser.add_option("-U", "--user", action="store", 
                      help="the user to connect with database [used in sql mode only]")
-    parser.add_option("-P", "--password", action="store", 
+    parser.add_option("-P", "--password", action="store_true",
                      help="the password to connect with database [used in sql mode only]")
     parser.add_option("-H", "--host", action="store", default='localhost',
                      help="the host to connect with database [used in sql mode only, default=%default]")
@@ -195,13 +196,16 @@ if __name__ == "__main__":
     else:
         validation_function = None
 
+    if options.password:
+        passwd = getpass.getpass()
+
     for a in args:     
         fname = a
         values = parse(fname,options.gzip,validation_function)
  
         if options.namefromfile:
             code = os.path.basename(a).split('-')[0]
-            tablename = "t_%s" % code
+            tablename = "gsod_%s" % code
         else:
             tablename = options.tablename
  
@@ -209,11 +213,12 @@ if __name__ == "__main__":
             output_csv(values,options.separator)
         elif options.mode == 'sql':
             if options.user and options.password and options.dbname:
+
                 try:
                     import pg
-                    conn_local = pg.connect(options.dbname,options.host,options.port,None,None,options.user,options.password)
+                    conn_local = pg.connect(options.dbname,options.host,options.port,None,None,options.user,passwd)
                 except ImportError, err:
-                    print err
+                    print "%s, please install python-pygresql" % err
                     sys.exit(1)
                 output_sql(values,tablename,options.createtable,conn_local)
             elif options.user or options.password or options.dbname:
