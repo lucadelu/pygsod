@@ -90,7 +90,6 @@ def parse(fname,gzip,validate=None):
             print e
             sys.exit(1)
 
-    import pdb; pdb.set_trace()
     values = []
     for line in lines[1:]:
         tmp = []
@@ -118,7 +117,7 @@ def output_sql(values,tbl,create,connection=False):
         	tbl,",\n ".join([ "%s %s" % (f,t) for (f,t) in fields]),
         	", ".join([p for p in pkey_fields])
         )
-        query_alt = "ALTER TABLE %s ADD COLUMN ymd date" % (tbl)
+        query_alt = "ALTER TABLE %s ADD COLUMN ymd date;" % (tbl)
         if connection:
             check_table = "SELECT count(tablename) FROM pg_tables where tablename='%s';" % (
                         tbl)
@@ -158,17 +157,17 @@ if __name__ == "__main__":
     parser.add_option("-c", "--createtable", action="store_true",
                      help="add sql instruction for creating the table [used in sql mode only]")
     parser.add_option("-g", "--gzip", action="store_true", help="the input file is gzip file")
-    parser.add_option("-N", "--nameforfile", action="store_true",
+    parser.add_option("-N", "--namefromfile", action="store_true",
                      help="read name from input file tablename used in INSERT statements " \
-                     + "[used in sql mode only")       
+                     + "[used in sql mode only]")
     parser.add_option("-m", "--mode", action="store", choices=mode_choices, 
                      default='csv', help="one of %s" % ",".join(mode_choices) \
                      +" [default=%default]")
     parser.add_option("-s", "--separator", action="store", default=',',
                      help="separator character [used in csv mode only, default='%default']")
-    parser.add_option("-n", "--tablename", action="store", default='gsod',
+    parser.add_option("-n", "--tablename", action="store",
                      help="tablename used in INSERT statements " \
-                     + "[used in sql mode only, default=%default]")
+                     + "[used in sql mode only")
     parser.add_option("-d", "--dbname", action="store", 
                      help="the name of database [used in sql mode only]")                     
     parser.add_option("-U", "--user", action="store", 
@@ -188,8 +187,8 @@ if __name__ == "__main__":
         parser.error('missing filename')
         sys.exit(1)
 
-    if options.nameforfile and options.tablename:
-        parser.error('please, you have to choose only one of option nameforfile and tablename')
+    if options.namefromfile and options.tablename:
+        parser.error('please, you have to choose only one of option namefromfile and tablename')
         
     if options.threshold > 0:
         validation_function = lambda x: threshold_check(x,options.threshold)
@@ -200,8 +199,8 @@ if __name__ == "__main__":
         fname = a
         values = parse(fname,options.gzip,validation_function)
  
-        if options.nameforfile:
-            code = a.split('-')[0]
+        if options.namefromfile:
+            code = os.path.basename(a).split('-')[0]
             tablename = "t_%s" % code
         else:
             tablename = options.tablename
