@@ -105,13 +105,24 @@ def output_csv(values,separator):
     for lst in values:
         print separator.join([ coalesce(value,"") for value in lst ])
 
-def output_sql(values,tbl,create):
+def output_sql(values,tbl,create,connection=False):
     fields = [ (field,type) for (field,start,end,conv,type) in input_format ]
-    if create:
-        print "CREATE TABLE %s (\n %s,\n PRIMARY KEY (%s)\n);" % (
+    if create:      
+        query_crea = "CREATE TABLE %s (\n %s,\n PRIMARY KEY (%s)\n);" % (
         	tbl,",\n ".join([ "%s %s" % (f,t) for (f,t) in fields]),
         	", ".join([p for p in pkey_fields])
         )
+        query_alt = "ALTER TABLE %s ADD COLUMN ymd date" % (tbl)
+        if connection:
+            check_table = "SELECT count(tablename) FROM pg_tables where tablename='%s';" % (
+                        tbl)
+            if connection.query(check_table).getresult()[0][0] == 0:
+               connection.query(query_crea)
+               connection.query(query_alt)               
+        else:
+            print query_crea
+            print query_alt
+
     text = re.compile('char',re.I)
     for lst in values:
         f = []
@@ -121,8 +132,19 @@ def output_sql(values,tbl,create):
                 f.append(field)
                 if text.match(type): value = "'%s'" % value
                 v.append(value)
-        print "INSERT INTO %s (%s) VALUES (%s);" % (tbl,",".join(f),",".join(v))
+        query_ins = "INSERT INTO %s (%s) VALUES (%s);" % (tbl,",".join(f),",".join(v))
+        if connection:
+            connection.query(query_ins) 
+        else:
+            print query_ins
 
+    query_update = "UPDATE %s SET ymd = to_date(array_to_string(" % tbl \
+                 + "ARRAY[year,month,day],'-'),'YYYY-MM-DD');"
+    if connection:
+        connection.query(query_update) 
+    else:
+        print query_update
+        
 if __name__ == "__main__":
     mode_choices = ['csv','sql']
     parser = OptionParser("Usage: %prog [options] filename")
@@ -143,6 +165,16 @@ if __name__ == "__main__":
                      + "[used in sql mode only, default=%default]")
     parser.add_option("-c", "--createtable", action="store_true", 
                      help="add sql instruction for creating the table [used in sql mode only]")
+    parser.add_option("-d", "--dbname", action="store", 
+                     help="the name of database [used in sql mode only]")                     
+    parser.add_option("-U", "--user", action="store", 
+                     help="the user to connect with database [used in sql mode only]")
+    parser.add_option("-P", "--password", action="store", 
+                     help="the password to connect with database [used in sql mode only]")
+    parser.add_option("-H", "--host", action="store", default='localhost',
+                     help="the host to connect with database [used in sql mode only, default=%default]")
+    parser.add_option("-p", "--port", action="store", default=5432,
+                     help="the port to connect with database [used in sql mode only]")
     parser.add_option("-t", "--threshold", action="store", type="int", default=0,
                     help="data is valid only if reported at least threshold" \
                     + " times (default %default = always valid)")
@@ -163,5 +195,16 @@ if __name__ == "__main__":
     if options.mode == 'csv':
         output_csv(values,options.separator)
     elif options.mode == 'sql':
-        output_sql(values,options.tablename,options.createtable)
+        if options.user and options.password and options.dbname:
+            try:
+                import pg
+                conn_local = pg.connect(options.dbname,options.host,options.port,None,None,options.user,options.password)
+            except ImportError, err:
+                print err
+                sys.exit(1)
+            output_sql(values,options.tablename,options.createtable,conn_local)
+        elif options.user or options.password or options.dbname:
+            print "You have to set dbname, user and password option"
+        else:
+            output_sql(values,options.tablename,options.createtable)
 
