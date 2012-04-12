@@ -79,12 +79,18 @@ def threshold_check(lst,threshold):
     if d['wdsp_count']<threshold:  d['wdspd']=None
     return [ d[field] for (field,start,end,conv,type) in input_format ]
 
-def parse(fname,validate=None):
-    try:
-        lines = file(fname).readlines()
-    except IOError,e:
-        print e
-        sys.exit(1)
+def parse(fname,gzip,validate=None):
+    if gzip:
+        import gzip
+        lines = gzip.open(fname).readlines()
+    else:
+        try:
+            lines = file(fname).readlines()
+        except IOError,e:
+            print e
+            sys.exit(1)
+
+    import pdb; pdb.set_trace()
     values = []
     for line in lines[1:]:
         tmp = []
@@ -148,13 +154,10 @@ def output_sql(values,tbl,create,connection=False):
 if __name__ == "__main__":
     mode_choices = ['csv','sql']
     parser = OptionParser("Usage: %prog [options] filename")
-    parser.set_defaults(
-        mode='csv',
-        separator=',',
-        tablename='myTable',
-        createtable=False,
-        threshold=0 
-    )
+
+    parser.add_option("-c", "--createtable", action="store_true",
+                     help="add sql instruction for creating the table [used in sql mode only]")
+    parser.add_option("-g", "--gzip", action="store_true", help="the input file is gzip file")
     parser.add_option("-m", "--mode", action="store", choices=mode_choices, 
                      default='csv', help="one of %s" % ",".join(mode_choices) \
                      +" [default=%default]")
@@ -163,8 +166,6 @@ if __name__ == "__main__":
     parser.add_option("-n", "--tablename", action="store", default='gsod',
                      help="tablename used in INSERT statements " \
                      + "[used in sql mode only, default=%default]")
-    parser.add_option("-c", "--createtable", action="store_true", 
-                     help="add sql instruction for creating the table [used in sql mode only]")
     parser.add_option("-d", "--dbname", action="store", 
                      help="the name of database [used in sql mode only]")                     
     parser.add_option("-U", "--user", action="store", 
@@ -184,13 +185,13 @@ if __name__ == "__main__":
         parser.error('missing filename')
         sys.exit(1)
 
-    if options.threshold>0:
+    if options.threshold > 0:
         validation_function = lambda x: threshold_check(x,options.threshold)
     else:
         validation_function = None
 
-    fname=args[0]
-    values = parse(fname,validation_function)
+    fname = args[0]
+    values = parse(fname,options.gzip,validation_function)
         
     if options.mode == 'csv':
         output_csv(values,options.separator)
