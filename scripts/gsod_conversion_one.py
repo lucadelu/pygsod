@@ -153,11 +153,14 @@ def output_sql(values,tbl,create,connection=False):
         
 if __name__ == "__main__":
     mode_choices = ['csv','sql']
-    parser = OptionParser("Usage: %prog [options] filename")
+    parser = OptionParser("Usage: %prog [options] filenames")
 
     parser.add_option("-c", "--createtable", action="store_true",
                      help="add sql instruction for creating the table [used in sql mode only]")
     parser.add_option("-g", "--gzip", action="store_true", help="the input file is gzip file")
+    parser.add_option("-N", "--nameforfile", action="store_true",
+                     help="read name from input file tablename used in INSERT statements " \
+                     + "[used in sql mode only")       
     parser.add_option("-m", "--mode", action="store", choices=mode_choices, 
                      default='csv', help="one of %s" % ",".join(mode_choices) \
                      +" [default=%default]")
@@ -185,27 +188,37 @@ if __name__ == "__main__":
         parser.error('missing filename')
         sys.exit(1)
 
+    if options.nameforfile and options.tablename:
+        parser.error('please, you have to choose only one of option nameforfile and tablename')
+        
     if options.threshold > 0:
         validation_function = lambda x: threshold_check(x,options.threshold)
     else:
         validation_function = None
 
-    fname = args[0]
-    values = parse(fname,options.gzip,validation_function)
-        
-    if options.mode == 'csv':
-        output_csv(values,options.separator)
-    elif options.mode == 'sql':
-        if options.user and options.password and options.dbname:
-            try:
-                import pg
-                conn_local = pg.connect(options.dbname,options.host,options.port,None,None,options.user,options.password)
-            except ImportError, err:
-                print err
-                sys.exit(1)
-            output_sql(values,options.tablename,options.createtable,conn_local)
-        elif options.user or options.password or options.dbname:
-            print "You have to set dbname, user and password option"
+    for a in args:     
+        fname = a
+        values = parse(fname,options.gzip,validation_function)
+ 
+        if options.nameforfile:
+            code = a.split('-')[0]
+            tablename = "t_%s" % code
         else:
-            output_sql(values,options.tablename,options.createtable)
+            tablename = options.tablename
+ 
+        if options.mode == 'csv':
+            output_csv(values,options.separator)
+        elif options.mode == 'sql':
+            if options.user and options.password and options.dbname:
+                try:
+                    import pg
+                    conn_local = pg.connect(options.dbname,options.host,options.port,None,None,options.user,options.password)
+                except ImportError, err:
+                    print err
+                    sys.exit(1)
+                output_sql(values,tablename,options.createtable,conn_local)
+            elif options.user or options.password or options.dbname:
+                print "You have to set dbname, user and password option"
+            else:
+                output_sql(values,tablename,options.createtable)
 
