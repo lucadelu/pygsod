@@ -136,6 +136,7 @@ class downGSOD:
                 logging.debug("Open connection %s" % self.url)
         except (EOFError, socket.gaierror), e:
             logging.error('Error in connection: %s' % e)
+            self.closeFTP()
             self.connectFTP()
 
     def closeFTP(self):
@@ -226,6 +227,7 @@ class downGSOD:
         #if it have an error it try to download again the file
         except (ftplib.error_reply,ftplib.error_perm,socket.error), e:
             logging.error("Cannot download %s, retry.." % filDown)
+            self.closeFTP()
             self.connectFTP()
             self.downloadFile(filDown,filSave)
 
