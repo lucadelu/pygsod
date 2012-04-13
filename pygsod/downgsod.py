@@ -141,8 +141,11 @@ class downGSOD:
 
     def closeFTP(self):
         """ Close ftp connection """
-        self.ftp.quit()
-        self.filelist.close()
+        try:
+            self.ftp.quit()
+            self.filelist.close()
+        except:
+            pass
         if self.debug==True:
             logging.debug("Close connection %s" % self.url)
 
