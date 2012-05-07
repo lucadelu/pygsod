@@ -111,9 +111,9 @@ def output_csv(values,separator):
     for lst in values:
         print separator.join([ coalesce(value,"") for value in lst ])
 
-def output_sql(values,tbl,create,connection=False):
+def output_sql(values,tbl,create,onlycreate,connection=False):
     fields = [ (field,type) for (field,start,end,conv,type) in input_format ]
-    if create:      
+    if create or onlycreate:
         query_crea = "CREATE TABLE %s (\n %s,\n PRIMARY KEY (%s)\n);" % (
         	tbl,",\n ".join([ "%s %s" % (f,t) for (f,t) in fields]),
         	", ".join([p for p in pkey_fields])
@@ -128,7 +128,8 @@ def output_sql(values,tbl,create,connection=False):
         else:
             print query_crea
             print query_alt
-
+    if onlycreate:
+        return
     text = re.compile('char',re.I)
     for lst in values:
         f = []
@@ -157,6 +158,8 @@ if __name__ == "__main__":
 
     parser.add_option("-c", "--createtable", action="store_true",
                      help="add sql instruction for creating the table [used in sql mode only]")
+    parser.add_option("-C", "--onlycreatetable", action="store_true",
+                     help="create only the table schema [used in sql mode only]")
     parser.add_option("-g", "--gzip", action="store_true", help="the input file is gzip file")
     parser.add_option("-N", "--namefromfile", action="store_true",
                      help="read name from input file tablename used in INSERT statements " \
@@ -213,16 +216,15 @@ if __name__ == "__main__":
             output_csv(values,options.separator)
         elif options.mode == 'sql':
             if options.user and options.password and options.dbname:
-
                 try:
                     import pg
                     conn_local = pg.connect(options.dbname,options.host,options.port,None,None,options.user,passwd)
                 except ImportError, err:
                     print "%s, please install python-pygresql" % err
                     sys.exit(1)
-                output_sql(values,tablename,options.createtable,conn_local)
+                output_sql(values,tablename,options.createtable,options.onlycreatetable,conn_local)
             elif options.user or options.password or options.dbname:
                 print "You have to set dbname, user and password option"
             else:
-                output_sql(values,tablename,options.createtable)
+                output_sql(values,tablename,options.createtable,options.onlycreatetable)
 
