@@ -111,23 +111,24 @@ def output_csv(values,separator):
     for lst in values:
         print separator.join([ coalesce(value,"") for value in lst ])
 
-def output_sql(values,tbl,create,onlycreate,connection=False):
+def output_sql(values,tbl,create,onlycreate,update,connection=False):
     fields = [ (field,type) for (field,start,end,conv,type) in input_format ]
     if create or onlycreate:
         query_crea = "CREATE TABLE %s (\n %s,\n PRIMARY KEY (%s)\n);" % (
         	tbl,",\n ".join([ "%s %s" % (f,t) for (f,t) in fields]),
         	", ".join([p for p in pkey_fields])
         )
-        query_alt = "ALTER TABLE %s ADD COLUMN ymd date;" % (tbl)
-        if connection:
-            check_table = "SELECT count(tablename) FROM pg_tables where tablename='%s';" % (
-                        tbl)
-            if connection.query(check_table).getresult()[0][0] == 0:
-               connection.query(query_crea)
-               connection.query(query_alt)               
-        else:
-            print query_crea
-            print query_alt
+        query_alt = "ALTER TABLE %s ADD COLUMN ymd date;" % (tbl)      
+        
+        check_table = "SELECT count(tablename) FROM pg_tables where tablename='%s';" % (
+                    tbl)
+        if connection.query(check_table).getresult()[0][0] == 0:
+            if connection:   
+                connection.query(query_crea)
+                connection.query(query_alt)               
+            else:
+                print query_crea
+                print query_alt
     if onlycreate:
         return
     text = re.compile('char',re.I)
@@ -144,13 +145,13 @@ def output_sql(values,tbl,create,onlycreate,connection=False):
             connection.query(query_ins) 
         else:
             print query_ins
-
-    query_update = "UPDATE %s SET ymd = to_date(array_to_string(" % tbl \
-                 + "ARRAY[year,month,day],'-'),'YYYY-MM-DD');"
-    if connection:
-        connection.query(query_update) 
-    else:
-        print query_update
+    if update:
+        query_update = "UPDATE %s SET ymd = to_date(array_to_string(" % tbl \
+                    + "ARRAY[year,month,day],'-'),'YYYY-MM-DD');"
+        if connection:
+            connection.query(query_update) 
+        else:
+            print query_update
         
 if __name__ == "__main__":
     mode_choices = ['csv','sql']
@@ -160,6 +161,8 @@ if __name__ == "__main__":
                      help="add sql instruction for creating the table [used in sql mode only]")
     parser.add_option("-C", "--onlycreatetable", action="store_true",
                      help="create only the table schema [used in sql mode only]")
+    parser.add_option("-u", "--updatetable", action="store_true",
+                     help="update date column into table [used in sql mode only]")                     
     parser.add_option("-g", "--gzip", action="store_true", help="the input file is gzip file")
     parser.add_option("-N", "--namefromfile", action="store_true",
                      help="read name from input file tablename used in INSERT statements " \
@@ -224,13 +227,16 @@ if __name__ == "__main__":
             if options.user and passwd and options.dbname:
                 try:
                     import pg
-                    conn_local = pg.connect(options.dbname,options.host,options.port,None,None,options.user,passwd)
+                    conn_local = pg.connect(options.dbname,options.host,
+                                    options.port,None,None,options.user,passwd)
                 except ImportError, err:
                     print "%s, please install python-pygresql" % err
                     sys.exit(1)
-                output_sql(values,tablename,options.createtable,options.onlycreatetable,conn_local)
+                output_sql(values,tablename,options.createtable,
+                           options.onlycreatetable, options.updatetable, conn_local)
             elif options.user or options.password or options.dbname:
                 print "You have to set dbname, user and password option"
             else:
-                output_sql(values,tablename,options.createtable,options.onlycreatetable)
+                output_sql(values,tablename,options.createtable,
+                          options.onlycreatetable, options.updatetable)
 
