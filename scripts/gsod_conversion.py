@@ -176,8 +176,10 @@ if __name__ == "__main__":
                      help="the name of database [used in sql mode only]")                     
     parser.add_option("-U", "--user", action="store", 
                      help="the user to connect with database [used in sql mode only]")
-    parser.add_option("-P", "--password", action="store_true",
-                     help="the password to connect with database [used in sql mode only]")
+    parser.add_option("-P", "--password", action="store",
+                     help="the password to connect with database as variable [used in sql mode only]")
+    parser.add_option("-W", "--force_password", action="store_true",
+                     help="the password to connect with database from standard input [used in sql mode only]")                     
     parser.add_option("-H", "--host", action="store", default='localhost',
                      help="the host to connect with database [used in sql mode only, default=%default]")
     parser.add_option("-p", "--port", action="store", default=5432,
@@ -199,8 +201,12 @@ if __name__ == "__main__":
     else:
         validation_function = None
 
-    if options.password:
+    passwd = None
+    if options.force_password:
         passwd = getpass.getpass()
+    elif options.password:
+        passwd = options.password
+        
 
     for a in args:     
         fname = a
@@ -215,7 +221,7 @@ if __name__ == "__main__":
         if options.mode == 'csv':
             output_csv(values,options.separator)
         elif options.mode == 'sql':
-            if options.user and options.password and options.dbname:
+            if options.user and passwd and options.dbname:
                 try:
                     import pg
                     conn_local = pg.connect(options.dbname,options.host,options.port,None,None,options.user,passwd)
